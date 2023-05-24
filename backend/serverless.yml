@@ -1,0 +1,30 @@
+service: pii-service
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: eu-central-1
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - "comprehend:DetectPiiEntities"
+          Resource: "*"
+
+functions:
+  detectPii:
+    handler: handlers/detectPii.handler
+    events:
+      - http:
+          path: detect
+          method: post
+
+plugins:
+  - serverless-esbuild
+
+custom:
+  esbuild:
+    bundle: true
+    exclude: []
