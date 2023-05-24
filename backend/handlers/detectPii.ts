@@ -1,3 +1,4 @@
+import { DynamoDB } from "aws-sdk";
 import {
   Comprehend,
   DetectPiiEntitiesRequest,
@@ -5,8 +6,11 @@ import {
   Entity,
 } from "aws-sdk";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { v4 as uuidv4 } from "uuid";
 
 const comprehend = new Comprehend();
+const dynamoDb = new DynamoDB.DocumentClient();
+const tableName = process.env.NOTES_TABLE;
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -59,7 +63,7 @@ export const handler = async (
       });
     }
 
-    return {
+    const result = {
       statusCode: 200,
       body: JSON.stringify({
         originalContent: text,
@@ -69,6 +73,22 @@ export const handler = async (
         messageLength: `Length of the message is ${text.length} characters`,
       }),
     };
+
+    // Store result in DynamoDB
+    const putParams = {
+      TableName: tableName,
+      Item: {
+        id: uuidv4(),
+        ...result,
+      },
+    };
+    console.log("tableName", tableName);
+
+    console.log(dynamoDb.put(putParams).promise());
+
+    await dynamoDb.put(putParams).promise();
+    console.log(result);
+    return result;
   } catch (error) {
     console.error(error);
     return {

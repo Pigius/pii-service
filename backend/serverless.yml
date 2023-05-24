@@ -12,10 +12,17 @@ provider:
           Action:
             - "comprehend:DetectPiiEntities"
           Resource: "*"
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+          Resource:
+            - Fn::GetAtt: [NotesTable, Arn]
 
 functions:
   detectPii:
     handler: handlers/detectPii.handler
+    environment:
+      NOTES_TABLE: ${self:custom.notesTable}
     events:
       - http:
           path: detect
@@ -28,3 +35,21 @@ custom:
   esbuild:
     bundle: true
     exclude: []
+  notesTable: ${self:service}-notes-${opt:stage, 'dev'}
+
+resources:
+  Resources:
+    NotesTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:custom.notesTable}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
