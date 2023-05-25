@@ -15,6 +15,7 @@ provider:
         - Effect: Allow
           Action:
             - dynamodb:PutItem
+            - dynamodb:Scan
           Resource:
             - Fn::GetAtt: [NotesTable, Arn]
 
@@ -27,7 +28,34 @@ functions:
       - http:
           path: detect
           method: post
-
+          cors:
+            origin: "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+  getNotes:
+    handler: handlers/getNotes.handler
+    environment:
+      NOTES_TABLE: ${self:custom.notesTable}
+    events:
+      - http:
+          path: notes
+          method: get
+          cors:
+            origin: "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
 plugins:
   - serverless-esbuild
 

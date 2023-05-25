@@ -41,11 +41,13 @@ export const handler = async (
     const response: DetectPiiEntitiesResponse = await comprehend
       .detectPiiEntities(params)
       .promise();
-    let redactedText = text;
+    let redactedText = null; // Initialize redactedText as null
     const detectedPiiEntities: string[] = [];
 
     // Check if any PII entities are detected
     if (response.Entities && response.Entities.length > 0) {
+      redactedText = text; // Set redactedText to text if there are detected entities
+
       // Loop over all detected entities
       response.Entities.forEach((entity: Entity) => {
         // Use the BeginOffset and EndOffset to replace PII data with asterisks
@@ -65,12 +67,17 @@ export const handler = async (
 
     const result = {
       statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Credentials": false,
+      },
       body: JSON.stringify({
         originalContent: text,
         detectedPiiEntities: detectedPiiEntities,
         redactedContent: redactedText,
         fullResponse: response,
         messageLength: `Length of the message is ${text.length} characters`,
+        creation_date: new Date().toISOString(),
       }),
     };
 
@@ -82,17 +89,18 @@ export const handler = async (
         ...result,
       },
     };
-    console.log("tableName", tableName);
-
-    console.log(dynamoDb.put(putParams).promise());
 
     await dynamoDb.put(putParams).promise();
-    console.log(result);
+
     return result;
   } catch (error) {
     console.error(error);
     return {
       statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Credentials": false,
+      },
       body: JSON.stringify({
         error: "An error occurred while detecting PII entities",
       }),

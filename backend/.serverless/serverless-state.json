@@ -21,7 +21,8 @@
             {
               "Effect": "Allow",
               "Action": [
-                "dynamodb:PutItem"
+                "dynamodb:PutItem",
+                "dynamodb:Scan"
               ],
               "Resource": [
                 {
@@ -116,6 +117,12 @@
               "LogGroupName": "/aws/lambda/pii-service-dev-detectPii"
             }
           },
+          "GetNotesLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/pii-service-dev-getNotes"
+            }
+          },
           "IamRoleLambdaExecution": {
             "Type": "AWS::IAM::Role",
             "Properties": {
@@ -207,7 +214,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/pii-service/dev/1684962963297-2023-05-24T21:16:03.297Z/pii-service.zip"
+                "S3Key": "serverless/pii-service/dev/1685034139081-2023-05-25T17:02:19.081Z/pii-service.zip"
               },
               "Handler": "handlers/detectPii.handler",
               "Runtime": "nodejs18.x",
@@ -230,14 +237,54 @@
               "DetectPiiLogGroup"
             ]
           },
-          "DetectPiiLambdaVersion2oNjPv0XCeOubd3E6i8h4hne7uEV8NI2T9hFrf0LQ4": {
+          "GetNotesLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/pii-service/dev/1685034139081-2023-05-25T17:02:19.081Z/pii-service.zip"
+              },
+              "Handler": "handlers/getNotes.handler",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "pii-service-dev-getNotes",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "NOTES_TABLE": "pii-service-notes-dev"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "GetNotesLogGroup"
+            ]
+          },
+          "DetectPiiLambdaVersionduzjT8jVb5m41s4S5JIbTZMerK1XeaSVMr6pRde80": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "DetectPiiLambdaFunction"
               },
-              "CodeSha256": "C7FJd3KpoD+VmMd+aULlr4+borJvdTPxis5pOWPIVrM="
+              "CodeSha256": "xGup0ahNDIZegYLIeF8KdQSrg41QpvJpfA7OzHCGAfM="
+            }
+          },
+          "GetNotesLambdaVersionskgne4LX82tL4a1wlZGocW3iLHa0LjvMJ1vDeQxkQE": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "GetNotesLambdaFunction"
+              },
+              "CodeSha256": "xGup0ahNDIZegYLIeF8KdQSrg41QpvJpfA7OzHCGAfM="
             }
           },
           "ApiGatewayRestApi": {
@@ -262,6 +309,111 @@
                 ]
               },
               "PathPart": "detect",
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              }
+            }
+          },
+          "ApiGatewayResourceNotes": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+              "ParentId": {
+                "Fn::GetAtt": [
+                  "ApiGatewayRestApi",
+                  "RootResourceId"
+                ]
+              },
+              "PathPart": "notes",
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              }
+            }
+          },
+          "ApiGatewayMethodDetectOptions": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "AuthorizationType": "NONE",
+              "HttpMethod": "OPTIONS",
+              "MethodResponses": [
+                {
+                  "StatusCode": "200",
+                  "ResponseParameters": {
+                    "method.response.header.Access-Control-Allow-Origin": true,
+                    "method.response.header.Access-Control-Allow-Headers": true,
+                    "method.response.header.Access-Control-Allow-Methods": true
+                  },
+                  "ResponseModels": {}
+                }
+              ],
+              "RequestParameters": {},
+              "Integration": {
+                "Type": "MOCK",
+                "RequestTemplates": {
+                  "application/json": "{statusCode:200}"
+                },
+                "ContentHandling": "CONVERT_TO_TEXT",
+                "IntegrationResponses": [
+                  {
+                    "StatusCode": "200",
+                    "ResponseParameters": {
+                      "method.response.header.Access-Control-Allow-Origin": "'*'",
+                      "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                      "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'"
+                    },
+                    "ResponseTemplates": {
+                      "application/json": ""
+                    }
+                  }
+                ]
+              },
+              "ResourceId": {
+                "Ref": "ApiGatewayResourceDetect"
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              }
+            }
+          },
+          "ApiGatewayMethodNotesOptions": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "AuthorizationType": "NONE",
+              "HttpMethod": "OPTIONS",
+              "MethodResponses": [
+                {
+                  "StatusCode": "200",
+                  "ResponseParameters": {
+                    "method.response.header.Access-Control-Allow-Origin": true,
+                    "method.response.header.Access-Control-Allow-Headers": true,
+                    "method.response.header.Access-Control-Allow-Methods": true
+                  },
+                  "ResponseModels": {}
+                }
+              ],
+              "RequestParameters": {},
+              "Integration": {
+                "Type": "MOCK",
+                "RequestTemplates": {
+                  "application/json": "{statusCode:200}"
+                },
+                "ContentHandling": "CONVERT_TO_TEXT",
+                "IntegrationResponses": [
+                  {
+                    "StatusCode": "200",
+                    "ResponseParameters": {
+                      "method.response.header.Access-Control-Allow-Origin": "'*'",
+                      "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                      "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET'"
+                    },
+                    "ResponseTemplates": {
+                      "application/json": ""
+                    }
+                  }
+                ]
+              },
+              "ResourceId": {
+                "Ref": "ApiGatewayResourceNotes"
+              },
               "RestApiId": {
                 "Ref": "ApiGatewayRestApi"
               }
@@ -313,7 +465,53 @@
               "DetectPiiLambdaPermissionApiGateway"
             ]
           },
-          "ApiGatewayDeployment1684962961914": {
+          "ApiGatewayMethodNotesGet": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "HttpMethod": "GET",
+              "RequestParameters": {},
+              "ResourceId": {
+                "Ref": "ApiGatewayResourceNotes"
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "ApiKeyRequired": false,
+              "AuthorizationType": "NONE",
+              "Integration": {
+                "IntegrationHttpMethod": "POST",
+                "Type": "AWS_PROXY",
+                "Uri": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":apigateway:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":lambda:path/2015-03-31/functions/",
+                      {
+                        "Fn::GetAtt": [
+                          "GetNotesLambdaFunction",
+                          "Arn"
+                        ]
+                      },
+                      "/invocations"
+                    ]
+                  ]
+                }
+              },
+              "MethodResponses": []
+            },
+            "DependsOn": [
+              "GetNotesLambdaPermissionApiGateway"
+            ]
+          },
+          "ApiGatewayDeployment1685034137246": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -322,7 +520,10 @@
               "StageName": "dev"
             },
             "DependsOn": [
-              "ApiGatewayMethodDetectPost"
+              "ApiGatewayMethodDetectOptions",
+              "ApiGatewayMethodNotesOptions",
+              "ApiGatewayMethodDetectPost",
+              "ApiGatewayMethodNotesGet"
             ]
           },
           "DetectPiiLambdaPermissionApiGateway": {
@@ -331,6 +532,43 @@
               "FunctionName": {
                 "Fn::GetAtt": [
                   "DetectPiiLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "ApiGatewayRestApi"
+                    },
+                    "/*/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "GetNotesLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "GetNotesLambdaFunction",
                   "Arn"
                 ]
               },
@@ -398,10 +636,19 @@
           "DetectPiiLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "DetectPiiLambdaVersion2oNjPv0XCeOubd3E6i8h4hne7uEV8NI2T9hFrf0LQ4"
+              "Ref": "DetectPiiLambdaVersionduzjT8jVb5m41s4S5JIbTZMerK1XeaSVMr6pRde80"
             },
             "Export": {
               "Name": "sls-pii-service-dev-DetectPiiLambdaFunctionQualifiedArn"
+            }
+          },
+          "GetNotesLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "GetNotesLambdaVersionskgne4LX82tL4a1wlZGocW3iLHa0LjvMJ1vDeQxkQE"
+            },
+            "Export": {
+              "Name": "sls-pii-service-dev-GetNotesLambdaFunctionQualifiedArn"
             }
           },
           "ServiceEndpoint": {
@@ -538,6 +785,22 @@
             "http": {
               "path": "detect",
               "method": "post",
+              "cors": {
+                "origin": "*",
+                "methods": [
+                  "OPTIONS",
+                  "POST"
+                ],
+                "headers": [
+                  "Content-Type",
+                  "X-Amz-Date",
+                  "Authorization",
+                  "X-Api-Key",
+                  "X-Amz-Security-Token",
+                  "X-Amz-User-Agent"
+                ],
+                "allowCredentials": false
+              },
               "integration": "AWS_PROXY"
             }
           }
@@ -550,7 +813,47 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "DetectPiiLambdaVersion2oNjPv0XCeOubd3E6i8h4hne7uEV8NI2T9hFrf0LQ4"
+        "versionLogicalId": "DetectPiiLambdaVersionduzjT8jVb5m41s4S5JIbTZMerK1XeaSVMr6pRde80"
+      },
+      "getNotes": {
+        "handler": "handlers/getNotes.handler",
+        "environment": {
+          "NOTES_TABLE": "pii-service-notes-dev"
+        },
+        "events": [
+          {
+            "http": {
+              "path": "notes",
+              "method": "get",
+              "cors": {
+                "origin": "*",
+                "methods": [
+                  "OPTIONS",
+                  "GET"
+                ],
+                "headers": [
+                  "Content-Type",
+                  "X-Amz-Date",
+                  "Authorization",
+                  "X-Api-Key",
+                  "X-Amz-Security-Token",
+                  "X-Amz-User-Agent"
+                ],
+                "allowCredentials": false
+              },
+              "integration": "AWS_PROXY"
+            }
+          }
+        ],
+        "name": "pii-service-dev-getNotes",
+        "package": {
+          "patterns": []
+        },
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs18.x",
+        "vpc": {},
+        "versionLogicalId": "GetNotesLambdaVersionskgne4LX82tL4a1wlZGocW3iLHa0LjvMJ1vDeQxkQE"
       }
     },
     "resources": {
@@ -606,7 +909,7 @@
     "isDashboardMonitoringPreconfigured": false
   },
   "package": {
-    "artifactDirectoryName": "serverless/pii-service/dev/1684962963297-2023-05-24T21:16:03.297Z",
+    "artifactDirectoryName": "serverless/pii-service/dev/1685034139081-2023-05-25T17:02:19.081Z",
     "artifact": "pii-service.zip"
   }
 }
