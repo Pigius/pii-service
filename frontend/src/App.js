@@ -1,7 +1,88 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Highlighter from "react-highlight-words";
-import "./App.css";
+import styled from "styled-components";
+
+const AppContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: Arial, sans-serif;
+  background-color: #ffa500;
+  height: 100vh;
+  width: 100vw;
+  overflow: auto;
+  padding: 50px 0;
+`;
+
+const Header = styled.h1`
+  color: #fff;
+`;
+
+const Note = styled.div`
+  background: #fff;
+  margin: 20px;
+  padding: 20px;
+  min-width: 300px;
+  border-radius: 15px;
+  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+  transform: rotate(
+    ${() => Math.floor(0.3 * 5 - 3)}deg
+  ); // A little rotation to make it feel like a sticky note
+`;
+
+const GridContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+  justify-content: center;
+  width: 90%;
+`;
+
+const Form = styled.form`
+  display: flex;
+  width: 30%;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+`;
+
+const Input = styled.textarea`
+  width: 90%;
+  min-height: 200px;
+  margin-bottom: 10px;
+  resize: vertical;
+  font-size: 18px;
+  padding: 10px;
+`;
+
+const Button = styled.button`
+  width: 80%;
+  padding: 15px;
+  background-color: #006400;
+  color: #fff;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-family: "Verdana", sans-serif;
+  font-size: 18px;
+  &:hover {
+    background-color: #009900;
+  }
+`;
+
+const Label = styled.label`
+  font-size: 20px;
+  font-family: "Verdana", sans-serif;
+  margin-bottom: 10px;
+`;
+
+const CharacterCount = styled.p`
+  align-self: flex-end;
+  margin-right: 10%;
+  font-size: 20px;
+  font-family: "Verdana", sans-serif;
+`;
 
 const App = () => {
   const [text, setText] = useState("");
@@ -14,12 +95,14 @@ const App = () => {
     setError(null);
     try {
       const response = await axios.get(process.env.REACT_APP_API_GATEWAY_NOTES);
+      console.log(response);
       const parsedNotes = response.data.map((note) => {
         return { ...note, body: JSON.parse(note.body) };
       });
       const sortedNotes = parsedNotes.sort((a, b) => {
-        return new Date(b.body.creation_date) - new Date(a.body.creation_date);
+        return new Date(b.body.creationDate) - new Date(a.body.creationDate);
       });
+      console.log("sortedNotes", sortedNotes);
       setNotes(sortedNotes);
     } catch (error) {
       setError("Error fetching notes");
@@ -31,19 +114,21 @@ const App = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (text.length > 5000) {
+      console.error(
+        "The note is too long, please keep it under 5000 characters."
+      );
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post(
-        process.env.REACT_APP_API_GATEWAY_DETECT,
-        { text }
-      );
-      const newNote = {
-        ...response.data,
-        body: JSON.parse(response.data.body),
-      };
-      setNotes((prevNotes) => [newNote, ...prevNotes]);
+      await axios.post(process.env.REACT_APP_API_GATEWAY_DETECT, { text });
       setText("");
+      // Refetch notes from API
+      fetchNotes();
     } catch (error) {
       setError("Error creating note");
       console.error(error);
@@ -56,58 +141,54 @@ const App = () => {
     fetchNotes();
   }, []);
 
+  const maxCharacters = 5000;
+  const charactersRemaining = maxCharacters - text.length;
+
   return (
-    <div className="App">
-      <header>
-        <h1>PII Detection App</h1>
-      </header>
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="note-input">Enter a note:</label>
-        <input
+    <AppContainer>
+      <Header>PII Detection App</Header>
+      <Form onSubmit={handleSubmit}>
+        <Label htmlFor="note-input">Enter a note:</Label>
+        <Input
           id="note-input"
-          type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
+          maxLength={maxCharacters}
         />
-        <button type="submit">Submit</button>
-      </form>
+        <CharacterCount>{`${charactersRemaining} characters remaining`}</CharacterCount>
+        <Button type="submit">Submit</Button>
+      </Form>
       {isLoading && <p>Loading...</p>}
-      {error && <p>{error}</p>}
-      <div>
+      <GridContainer>
         {notes.map((note, index) => {
           const body = note.body;
+
           return (
-            <div key={index}>
-              <h3>Original Content:</h3>
-              <p>{body.originalContent}</p>
-              <h3>Size:</h3>
-              <p>{body.messageLength}</p>
-              <h3>Redacted Text:</h3>
-              {body.redactedContent && body.redactedContent.length ? (
+            <Note key={index}>
+              <h3>{body.originalContent}</h3>
+              <p>Message length: {body.messageLength}</p>
+              <p>Creation date: {note.creation_date}</p>
+              <p>Detected PII entities:</p>
+              <ul>
+                {body.detectedPiiEntities.map((entity, entityIndex) => (
+                  <li key={entityIndex}>{entity}</li>
+                ))}
+              </ul>
+              <>
+                <p>Redacted content:</p>
                 <Highlighter
                   highlightClassName="YourHighlightClass"
                   searchWords={body.detectedPiiEntities || []}
                   autoEscape={true}
-                  textToHighlight={body.redactedContent}
+                  textToHighlight={body.redactedContent || ""}
                 />
-              ) : (
-                <p>No text was redacted</p>
-              )}
-              <h3>Detected PII Entities:</h3>
-              {body.detectedPiiEntities && body.detectedPiiEntities.length ? (
-                <ul>
-                  {body.detectedPiiEntities.map((entity, index) => (
-                    <li key={index}>{entity}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No PII entities detected</p>
-              )}
-            </div>
+              </>
+              )
+            </Note>
           );
         })}
-      </div>
-    </div>
+      </GridContainer>
+    </AppContainer>
   );
 };
 

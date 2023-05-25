@@ -1,5 +1,5 @@
 
 backend/node_modules/*
 frontend/.env
-backend/.serverless/cloudformation-template-update-stack.json
-backend/.serverless/cloudformation-template-update-stack.json
+backend/.serverless/*
+

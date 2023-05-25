@@ -77,7 +77,7 @@ export const handler = async (
         redactedContent: redactedText,
         fullResponse: response,
         messageLength: `Length of the message is ${text.length} characters`,
-        creation_date: new Date().toISOString(),
+        creationDate: new Date().toISOString(),
       }),
     };
 
