@@ -76,7 +76,7 @@ export const handler = async (
         detectedPiiEntities: detectedPiiEntities,
         redactedContent: redactedText,
         fullResponse: response,
-        messageLength: `Length of the message is ${text.length} characters`,
+        messageLength: text.length,
         creationDate: new Date().toISOString(),
       }),
     };

@@ -84,10 +84,40 @@ const CharacterCount = styled.p`
   font-family: "Verdana", sans-serif;
 `;
 
+const piiEntities = [
+  "NAME",
+  "DATE_TIME",
+  "ADDRESS",
+  "USERNAME",
+  "PASSWORD",
+  "AWS_ACCESS_KEY",
+  "AWS_SECRET_KEY",
+  "IP_ADDRESS",
+  "PHONE",
+  "EMAIL",
+  "SSN",
+  "BANK_ACCOUNT_NUMBER",
+  "BANK_ROUTING",
+  "CREDIT_DEBIT_NUMBER",
+  "CREDIT_DEBIT_CVV",
+  "CREDIT_DEBIT_EXPIRY",
+  "PIN",
+  "NATIONAL_HEALTH_SERVICE_NUMBER",
+  "SOCIAL_INSURANCE_NUMBER",
+  "ABN",
+  "UK_NATIONAL_INSURANCE_NUMBER",
+  "UK_UNIQUE_TAXPAYER_REFERENCE",
+  "PROFESSION",
+  "AGE",
+  "DATE_OF_BIRTH",
+  "GENDER",
+];
+
 const App = () => {
   const [text, setText] = useState("");
   const [notes, setNotes] = useState([]);
   const [isLoading, setLoading] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [error, setError] = useState(null);
 
   const fetchNotes = async () => {
@@ -147,6 +177,18 @@ const App = () => {
   return (
     <AppContainer>
       <Header>PII Detection App</Header>
+      <p>
+        This app uses Amazon Comprehend's PII detection to find and redact
+        Personally Identifiable Information (PII) from the text you enter.
+        Please only use fictional data, and do not paste real personal data into
+        this application. Amazon Comprehend can detect the following PII
+        entities:
+      </p>
+      <ul>
+        {piiEntities.map((entity) => (
+          <li key={entity}>{entity}</li>
+        ))}
+      </ul>
       <Form onSubmit={handleSubmit}>
         <Label htmlFor="note-input">Enter a note:</Label>
         <Input
@@ -166,7 +208,6 @@ const App = () => {
           return (
             <Note key={index}>
               <h3>{body.originalContent}</h3>
-              <p>Message length: {body.messageLength}</p>
               <p>Creation date: {note.creation_date}</p>
               <p>Detected PII entities:</p>
               <ul>
@@ -180,10 +221,12 @@ const App = () => {
                   highlightClassName="YourHighlightClass"
                   searchWords={body.detectedPiiEntities || []}
                   autoEscape={true}
-                  textToHighlight={body.redactedContent || ""}
+                  textToHighlight={
+                    body.redactedContent || "Nothing to redact here"
+                  }
                 />
               </>
-              )
+              <p>Message length: {body.messageLength}</p>
             </Note>
           );
         })}
