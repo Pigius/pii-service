@@ -29,7 +29,7 @@ functions:
           path: detect
           method: post
           cors:
-            origin: "*"
+            origin: ${env:ACCESS_CONTROL_ALLOW_ORIGIN}
             headers:
               - Content-Type
               - X-Amz-Date
@@ -47,7 +47,7 @@ functions:
           path: notes
           method: get
           cors:
-            origin: "*"
+            origin: ${env:ACCESS_CONTROL_ALLOW_ORIGIN}
             headers:
               - Content-Type
               - X-Amz-Date
