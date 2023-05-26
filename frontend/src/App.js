@@ -125,18 +125,15 @@ const App = () => {
     setError(null);
     try {
       const response = await axios.get(process.env.REACT_APP_API_GATEWAY_NOTES);
-      console.log(response);
       const parsedNotes = response.data.map((note) => {
         return { ...note, body: JSON.parse(note.body) };
       });
       const sortedNotes = parsedNotes.sort((a, b) => {
         return new Date(b.body.creationDate) - new Date(a.body.creationDate);
       });
-      console.log("sortedNotes", sortedNotes);
       setNotes(sortedNotes);
     } catch (error) {
       setError("Error fetching notes");
-      console.error(error);
     } finally {
       setLoading(false);
     }
