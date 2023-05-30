@@ -44,6 +44,10 @@ export const handler = async (
     let redactedText = null; // Initialize redactedText as null
     const detectedPiiEntities: string[] = [];
 
+    const responseContain: DetectPiiEntitiesResponse = await comprehend
+      .containsPiiEntities(params)
+      .promise();
+    const containsPiiEntities: string[] = [];
     // Check if any PII entities are detected
     if (response.Entities && response.Entities.length > 0) {
       redactedText = text; // Set redactedText to text if there are detected entities
@@ -62,6 +66,10 @@ export const handler = async (
         detectedPiiEntities.push(
           `${pii} is a ${entity.Type} PII data type with a score of ${entity.Score}`
         );
+        // Add the entity description to the detectedPiiEntities array
+        containsPiiEntities.push(
+          `${pii} is a ${entity.Type} PII data type with a score of ${entity.Score}`
+        );
       });
     }
 
@@ -74,8 +82,11 @@ export const handler = async (
       body: JSON.stringify({
         originalContent: text,
         detectedPiiEntities: detectedPiiEntities,
+        containsPiiEntities: containsPiiEntities,
         redactedContent: redactedText,
-        fullResponse: response,
+        fullResponseDetect: response,
+        fullResponseContains: responseContain,
+
         messageLength: text.length,
         creationDate: new Date().toISOString(),
       }),
