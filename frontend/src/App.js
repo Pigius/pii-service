@@ -84,35 +84,6 @@ const CharacterCount = styled.p`
   font-family: "Verdana", sans-serif;
 `;
 
-const piiEntities = [
-  "NAME",
-  "DATE_TIME",
-  "ADDRESS",
-  "USERNAME",
-  "PASSWORD",
-  "AWS_ACCESS_KEY",
-  "AWS_SECRET_KEY",
-  "IP_ADDRESS",
-  "PHONE",
-  "EMAIL",
-  "SSN",
-  "BANK_ACCOUNT_NUMBER",
-  "BANK_ROUTING",
-  "CREDIT_DEBIT_NUMBER",
-  "CREDIT_DEBIT_CVV",
-  "CREDIT_DEBIT_EXPIRY",
-  "PIN",
-  "NATIONAL_HEALTH_SERVICE_NUMBER",
-  "SOCIAL_INSURANCE_NUMBER",
-  "ABN",
-  "UK_NATIONAL_INSURANCE_NUMBER",
-  "UK_UNIQUE_TAXPAYER_REFERENCE",
-  "PROFESSION",
-  "AGE",
-  "DATE_OF_BIRTH",
-  "GENDER",
-];
-
 const App = () => {
   const [text, setText] = useState("");
   const [notes, setNotes] = useState([]);
@@ -179,13 +150,13 @@ const App = () => {
         Personally Identifiable Information (PII) from the text you enter.
         Please only use fictional data, and do not paste real personal data into
         this application. Amazon Comprehend can detect the following PII
-        entities:
+        <a
+          target="_blank"
+          href="https://docs.aws.amazon.com/comprehend/latest/dg/how-pii.html"
+        >
+          entities
+        </a>
       </p>
-      <ul>
-        {piiEntities.map((entity) => (
-          <li key={entity}>{entity}</li>
-        ))}
-      </ul>
       <Form onSubmit={handleSubmit}>
         <Label htmlFor="note-input">Enter a note:</Label>
         <Input
