@@ -149,7 +149,7 @@ const App = () => {
         This app uses Amazon Comprehend's PII detection to find and redact
         Personally Identifiable Information (PII) from the text you enter.
         Please only use fictional data, and do not paste real personal data into
-        this application. Amazon Comprehend can detect the following PII
+        this application. Amazon Comprehend can detect the following PII &nbsp;
         <a
           target="_blank"
           rel="noreferrer"
