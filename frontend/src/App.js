@@ -152,6 +152,7 @@ const App = () => {
         this application. Amazon Comprehend can detect the following PII
         <a
           target="_blank"
+          rel="noreferrer"
           href="https://docs.aws.amazon.com/comprehend/latest/dg/how-pii.html"
         >
           entities
