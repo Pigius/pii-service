@@ -178,7 +178,6 @@ const App = () => {
           return (
             <Note key={index}>
               <h3>{body.originalContent}</h3>
-              <p>Creation date: {note.creationDate}</p>
               <p>Detected PII entities:</p>
               <ul>
                 {body.detectedPiiEntities.map((entity, entityIndex) => (
