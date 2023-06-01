@@ -157,6 +157,7 @@ const App = () => {
         >
           entities
         </a>
+        .
       </p>
       <Form onSubmit={handleSubmit}>
         <Label htmlFor="note-input">Enter a note:</Label>
