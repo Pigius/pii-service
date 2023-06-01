@@ -1,6 +1,8 @@
 ## Pii Service
 
-Application for the purpose of the demo for AWS Community Day in Warsaw.
+Application for the purpose of the demo for AWS Community Day in Warsaw 1st June 2023.
+
+Presentation could be located in the same directory.
 
 The application detects and redacts PII data from notes provided by a user.
 
